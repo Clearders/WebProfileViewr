@@ -129,8 +129,11 @@ public class WebprofileviewerClient implements ClientModInitializer {
                                                         }
                                                     }), Minecraft.getInstance())
                                                     .exceptionally(ex -> {
-                                                        Minecraft.getInstance().execute(() -> ctx.getSource().sendFeedback(
-                                                                Component.literal("Failed: " + ex.getMessage())));
+                                                        Minecraft.getInstance().execute(() -> {
+                                                            // Show username in yellow, then a red friendly message
+                                                            String failMsg = ChatFormatting.YELLOW + cleanPlayer + " :\n" +  ChatFormatting.RED + "This player may be nicked!";
+                                                            ctx.getSource().sendFeedback(Component.literal(failMsg));
+                                                        });
                                                         return null;
                                                     });
 
@@ -182,8 +185,11 @@ public class WebprofileviewerClient implements ClientModInitializer {
                                                                  }
                                                              });
                                                          } catch (Exception e) {
-                                                             Minecraft.getInstance().execute(() -> ctx.getSource().sendFeedback(
-                                                                     Component.literal("Failed to fetch stats for " + name + ": " + e.getMessage())));
+                                                             // On failure, show a user-friendly, colored message similar to /web
+                                                             Minecraft.getInstance().execute(() -> {
+                                                                 String failMsg = ChatFormatting.YELLOW + name + " " + ChatFormatting.GOLD + "[" + current + "/" + total + "]:" + ChatFormatting.RED + "\nThis player may be nicked!";
+                                                                 ctx.getSource().sendFeedback(Component.literal(failMsg));
+                                                             });
                                                          }
                                                          //设置延迟，防止触发Hypixel的反爬虫机制
                                                          try {
