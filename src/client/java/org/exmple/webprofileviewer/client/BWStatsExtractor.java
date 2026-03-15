@@ -5,48 +5,71 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 public class BWStatsExtractor {
-    public String extractBWStats(String playername) throws Exception {
+    public BWStats extractBWStats(String playername) throws Exception {
         String url = "https://hypixel.net/player/" + playername;
         Document doc = Jsoup.connect(url)
                 .userAgent("Mozilla/5.0")
                 .get();
-        //抓取各项数据部分：
 
-        //4s final
-        String finalKD4v4 = doc.select("#stats-content-bedwars td.statName").stream()
-                .filter(td -> "4v4v4v4 Final K/D".equalsIgnoreCase(td.text().trim()))
-                .findFirst()
-                .map(Element::parent)                  // tr
-                .map(tr -> tr.selectFirst("td.statValue"))
-                .map(Element::text)
-                .orElse("未找到");
-        //2s final
-        String finalKD2v2 = doc.select("#stats-content-bedwars td.statName").stream()
-                .filter(td -> "Doubles Final K/D".equalsIgnoreCase(td.text().trim()))
-                .findFirst()
-                .map(Element::parent)                  // tr
-                .map(tr -> tr.selectFirst("td.statValue"))
-                .map(Element::text)
-                .orElse("未找到");
-        //total wins
-        String totalWins = doc.select("#stats-content-bedwars td.statName").stream()
-                .filter(td -> "Wins".equalsIgnoreCase(td.text().trim()))
-                .findFirst()
-                .map(Element::parent)                  // tr
-                .map(tr -> tr.selectFirst("td.statValue"))
-                .map(Element::text)
-                .orElse("未找到");
-        //final K/D
-        String finalKD = doc.select("#stats-content-bedwars td.statName").stream()
-                .filter(td -> "Final K/D".equalsIgnoreCase(td.text().trim()))
-                .findFirst()
-                .map(Element::parent)                  // tr
-                .map(tr -> tr.selectFirst("td.statValue"))
-                .map(Element::text)
-                .orElse("未找到");
-        //拼接数据后返回
-        String stats="Final K/D:" + finalKD + "\nDoubles Final K/D:" + finalKD2v2 + "\n4v4v4v4 Final K/D:" + finalKD4v4 + "\nTotal Wins:" + totalWins;
-        return stats;
+        String finalKD4v4 = "未找到";
+        String finalKD2v2 = "未找到";
+        String totalWins = "未找到";
+        String finalKD = "未找到";
 
+        for (Element tdName : doc.select("#stats-content-bedwars td.statName")) {
+            String nameText = tdName.text().trim();
+            Element tr = tdName.parent();
+            if (tr == null) continue;
+            Element tdValue = tr.selectFirst("td.statValue");
+            if (tdValue == null) continue;
+
+            String value = tdValue.text();
+
+            if ("4v4v4v4 Final K/D".equalsIgnoreCase(nameText) && "未找到".equals(finalKD4v4)) {
+                finalKD4v4 = value;
+            } else if ("Doubles Final K/D".equalsIgnoreCase(nameText) && "未找到".equals(finalKD2v2)) {
+                finalKD2v2 = value;
+            } else if ("Wins".equalsIgnoreCase(nameText) && "未找到".equals(totalWins)) {
+                totalWins = value;
+            } else if ("Final K/D".equalsIgnoreCase(nameText) && "未找到".equals(finalKD)) {
+                finalKD = value;
+            }
+
+            if (!"未找到".equals(finalKD4v4) && !"未找到".equals(finalKD2v2) && !"未找到".equals(totalWins) && !"未找到".equals(finalKD)) {
+                break;
+            }
+        }
+
+        return new BWStats(finalKD, finalKD2v2, finalKD4v4, totalWins);
+    }
+
+    public static class BWStats {
+        private String finalKD;
+        private String finalKD2v2;
+        private String finalKD4v4;
+        private String totalWins;
+
+        public BWStats(String finalKD, String finalKD2v2, String finalKD4v4, String totalWins) {
+            this.finalKD = finalKD;
+            this.finalKD2v2 = finalKD2v2;
+            this.finalKD4v4 = finalKD4v4;
+            this.totalWins = totalWins;
+        }
+
+        public String getFinalKD() {
+            return finalKD;
+        }
+
+        public String getFinalKD2v2() {
+            return finalKD2v2;
+        }
+
+        public String getFinalKD4v4() {
+            return finalKD4v4;
+        }
+
+        public String getTotalWins() {
+            return totalWins;
+        }
     }
 }
